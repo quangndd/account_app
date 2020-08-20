@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Personal Account Manager</title>
+	<style>
+		table, th, td {
+			border: 1px solid black;
+			border-collapse: collapse;
+		}
+		table.center {
+			width: 61%;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		th, td {
+			padding: 5px;
+		}
+		div.table{
+			overflow: auto;
+		}
+		.topleft {
+			position: absolute;
+			top: 8px;
+			left: 16px;
+			font-size: 18px;
+		}
+		.editbut {
+			width: 100px;
+			position: absolute;
+			top: 100px;
+			left: 16px;
+			font-size: 16px;
+		}
+		.delbut {
+			width: 100px;
+			position: absolute;
+			top: 150px;
+			left: 16px;
+			font-size: 16px;
+		}
+		.downlbut {
+			white-space: normal;
+			width: 100px;
+			position: absolute;
+			top: 200px;
+			left: 16px;
+			font-size: 16px;
+		}
+		.dateform {
+			text-align: center;
+			padding-bottom: 5px;
+		}
+		.editform {
+			margin-top: 10px;
+			text-align: left;
+			float: left;
+			display: inline-block;
+		}
+		.editlabel{
+			width: 200px;
+			height: 18px;
+			margin-bottom: 10px;
+		}
+		.edit{
+			text-align: left;
+			margin-bottom: 10px;
+			float: left;
+			margin-left: 10px;
+			width: 90px;
+			display: inline-block;
+		}
+		#editdiv {
+			width: 320px;
+			height: 316px;
+			top: 130px;
+			right: 50px;
+			position: absolute;
+			z-index: 9;
+			background-color: #f1f1f1;
+			text-align: center;
+			border: 1px solid #d3d3d3;
+		}
+		#editdivheader {
+			padding: 10px;
+			cursor: move;
+			z-index: 10;
+			background-color: #C0DEFF;
+			color: #000;
+		}
+		#deletediv {
+			width: 320px;
+			height: 140px;
+			top: 160px;
+			right: 50px;
+			position: absolute;
+			z-index: 9;
+			background-color: #f1f1f1;
+			text-align: center;
+			border: 1px solid #d3d3d3;
+		}
+		#deletedivheader {
+			padding: 10px;
+			cursor: move;
+			z-index: 10;
+			background-color: #FFB4B4;
+			color: #000;
+		}
+		#downloaddiv {
+			width: 320px;
+			height: 190px;
+			top: 190px;
+			right: 50px;
+			position: absolute;
+			z-index: 9;
+			background-color: #f1f1f1;
+			text-align: center;
+			border: 1px solid #d3d3d3;
+		}
+		#downloaddivheader {
+			padding: 10px;
+			cursor: move;
+			z-index: 10;
+			background-color: #D78EFF;
+			color: #000;
+		}
+		.btn {
+			width: 120px;
+			height: 35px;
+			margin-left: 100px;
+			background-color: DodgerBlue;
+			border: none;
+			color: white;
+			cursor: pointer;
+			font-size: 14px;
+		}
+		.btn:hover {
+			background-color: RoyalBlue;
+		}
+		.alertOK {
+			position: absolute;
+			top: 8px;
+			left: 350px;	
+			width: 30%;
+			padding: 20px;
+			background-color: #2DD14E;
+			color: white;
+		}
+		.alertNOTOK {
+			position: absolute;
+			top: 8px;
+			left: 350px;
+			width: 30%;
+			padding: 20px;
+			background-color: #f44336;
+			color: white;
+		}
+		.closebtn {
+			margin-left: 15px;
+			color: white;
+			font-weight: bold;
+			float: right;
+			font-size: 22px;
+			line-height: 20px;
+			cursor: pointer;
+			transition: 0s;
+		}
+		.closebtn:hover {
+			color: black;
+		}
+	</style>
+</head>
+
+<body style="overflow: auto;">
+	<h2 style="text-align:center">Account History</h2>
+	<input class="editbut" type="button" name="edit" value="Edit" onclick="showD(editdiv)"/>
+	<input class="delbut" type="button" name="del" value="Delete" onclick="showD(deletediv)"/>
+	<input class="downlbut" type="button" name="downl" value="Download Statement" onclick="showD(downloaddiv)"/>
+	<form class="dateform" method="POST" action="/history/send">
+		<label>From:</label>
+		<input type="date" name="fromdate" value={%if request.form['fromdate'] %} {{ request.form['fromdate'] }} {% else %} {{ date_range[0] }} {%endif%}>  
+		<label>To:</label>
+		<input type="date" name="todate" value={%if request.form['todate'] %} {{ request.form['todate'] }} {% else %} {{ date_range[1] }} {%endif%}>
+		<label>Type:</label>
+		<select name="selecttype">
+			<option value="All" {%if select_type == "All"  %} selected {%endif%}>All</option>
+			<option value="Income" {%if select_type == "Income" %} selected {%endif%}>Income</option>
+			<option value="Expense" {%if select_type == "Expense" %} selected {%endif%}>Expense</option>
+		</select>
+		<label>Order:</label>
+		<select name="orderby">
+			<option value="Latest" {%if order_by == "Latest" %} selected {%endif%}>Latest</option>
+			<option value="Oldest" {%if order_by == "Oldest" %} selected {%endif%}>Oldest</option>
+		</select>
+		<input type="submit">
+	</form>
+
+	<div class="table">
+		<table class="center">
+			<thead style="text-align:center">
+				<td><strong>ID</strong></td>
+				<td><strong>Date</strong></td>
+				<td><strong>Type</strong></td>
+				<td><strong>Category</strong></td>
+				<td><strong>Description</strong></td>
+				<td><strong>Amount(VND)</strong></td>
+			</thead>
+
+			{% for item in items %}
+			<tr>
+				<td>{{ item['id'] }}</td>
+				<td>{{ item['date'] }}</td>
+				<td>{{ item['type'] }}</td>
+				<td>{{ item['category'] }}</td>
+				<td>{{ item['description'] }}</td>
+				<td style="text-align:right">{{ item['amount'] }}</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<div id="editdiv" style="display:none;">
+		<div id="editdivheader"><strong>Edit Item by ID</strong></div>
+		<form class="editform" method="POST" action="/history/edit">
+			<label class="edit">Select ID:</label>
+			<input name="eid" class="editlabel" type="number" min="0" dir="rtl" step="1" value="{{ request.form['eid'] }}">
+			<br>
+			<label class="edit">Date:</label>
+			<input type="date" name="edate" class="editlabel" dir="rtl" value={%if request.form['edate'] %} {{ request.form['edate'] }} {% else %} {{ edate }} {%endif%}>  
+			<br>
+			<label class="edit">Type:</label>
+			<select name="etype" class="editlabel" dir="rtl">
+				<option value="Income" {%if request.form['etype'] == "Income"%} selected {%endif%}>Income</option>
+				<option value="Expense" {%if request.form['etype'] == "Expense"%} selected {%endif%}>Expense</option>
+			</select>
+			<br>
+			<label class="edit">Category:</label>
+			<input name="ecategory" class="editlabel" type="number" min="1" max="10" dir="rtl" value="{{ request.form['ecategory'] }}">
+			<br>
+			<label class="edit">Description:</label>
+			<textarea name="edescr" class="editlabel" rows="2" cols="30" placeholder="Enter description here." style="text-align: right;">{{ request.form['edescr'] }}</textarea>
+			<br>
+			<label class="edit">Amount:</label>
+			<input name="eamount" class="editlabel" id="textBox" type="number" dir="rtl" min="0" step="0.001" style="text-align:right; width: 49%" value="{{ request.form['eamount'] }}"> (VND)
+			<br>
+			<input type="submit" value="  Edit  " style="margin-left:110px"><input type="reset" value="Reset" style="margin:0 5px">
+			<br>
+		</form>
+	</div>
+
+	{%if edited == True %}
+	<div class="alertOK">
+		<span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+		<strong> SUCCESS! Item has been UPDATED.</strong>
+	</div>
+	{% elif edited == False %}
+	<div class="alertNOTOK">
+		<span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+		<strong>ERROR! Some information is INCORRECT.</strong>
+	</div>
+	{%endif%}
+	<div id="deletediv" style="display:none;">
+		<div id="deletedivheader"><strong>Delete Item by ID</strong></div>
+		<form class="editform" method="POST" action="/history/delete">
+			<label class="edit">Select ID:</label>
+			<input name="did" class="editlabel" type="number" min="0" dir="rtl" step="1">
+			<br>
+			<input type="submit" value="Delete" style="margin-left:110px;"><input type="reset" value=" Reset " style="margin:0 5px;">
+			<br>
+		</form>
+	</div>
+	{%if deleted == True %}
+	<div class="alertOK">
+		<span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+		<strong> SUCCESS! Item has been DELETED.</strong>
+	</div>
+	{% elif deleted == False %}
+	<div class="alertNOTOK">
+		<span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+		<strong>ERROR! Some information is INCORRECT.</strong>
+	</div>
+	{%endif%}
+	<div id="downloaddiv" style="display:none;">
+		<div id="downloaddivheader"><strong>Download Statement</strong></div>
+		<form class="editform" method="POST" action="/history/download">
+			<label class="edit">From:</label>
+			<input type="date" class="editlabel" name="dfrom" value={%if request.form['dfrom'] %} {{ request.form['dfrom'] }} {% else %} {{ thismonth }} {%endif%}>
+			<br>
+			<label class="edit">To:</label>
+			<input type="date" class="editlabel" name="dto" value={%if request.form['dto'] %} {{ request.form['dto'] }} {% else %} {{ thismonth }} {%endif%}> 
+			<br>
+			<button class="btn" onclick="showMesg(msg)"><i class="fa fa-download"></i>Download</button>
+			<br>
+			<div id="msg" style="padding:10px; margin-left: 60px; display:none">Your download has started.</div>
+		</form>
+	</div>
+	{%if downloaded == True %}
+	<div class="alertOK">
+		<span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+		<strong>Your file is ready!</strong>
+	</div>
+	{% elif downloaded == False %}
+	<div class="alertNOTOK">
+		<span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span> 
+		<strong>ERROR! Some information is INCORRECT.</strong>
+	</div>
+	{%endif%}
+
+	<script>
+		function showMesg(elmnt) {
+			var x = document.getElementById(elmnt.id);
+			x.style.display = "block";
+		}
+
+//Show or hide division
+function showD(elmnt) {
+	var x = document.getElementById(elmnt.id);
+	if (x.style.display === "none") {
+		x.style.display = "block";
+	} else {
+		x.style.display = "none";
+	}
+}
+
+//Make the DIV element draggagle:
+dragElement(document.getElementById("editdiv"));
+dragElement(document.getElementById("deletediv"));
+dragElement(document.getElementById("downloaddiv"));
+
+function dragElement(elmnt) {
+	var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+	if (document.getElementById(elmnt.id + "header")) {
+		/* if present, the header is where you move the DIV from:*/
+		document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+	} else {
+		/* otherwise, move the DIV from anywhere inside the DIV:*/
+		elmnt.onmousedown = dragMouseDown;
+	}
+
+	function dragMouseDown(e) {
+		e = e || window.event;
+		e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+}
+
+function elementDrag(e) {
+	e = e || window.event;
+	e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+}
+
+function closeDragElement() {
+	/* stop moving when mouse button is released:*/
+	document.onmouseup = null;
+	document.onmousemove = null;
+}
+}
+</script>
+<a href = "/"><h3 class="topleft">[Home]</h3></a>
+</body>
+</html>
